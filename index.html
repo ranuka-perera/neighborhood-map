@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="styles/main.css" media="all" rel="stylesheet"/>
+    <script src="bower_components/headjs/dist/1.0.0/head.load.min.js"></script>
+    <script>
+        // Api key is in the appMap.js, so we need for it to load before we load the google maps script.
+        // The scripts are loaded asyncly.
+        head.load(
+            "bower_components/knockout/dist/knockout.js", "bower_components/jquery/dist/jquery.min.js", "js/appMap.js", function () {
+                // Load google maps only if page is fully loaded.
+                head.ready(document, function() {
+                    head.load(googleMap.mapsUrl);
+                });
+            });
+</script>
+</head>
+<body>
+<div id="map"></div>
+<div id="overlay">
+    <div id="search" class="floating-input"><label for="search-field">Search Map</label><input id="search-field" type="text"></div>
+    <div id="filter" class="floating-input"><label>Filter Map</label><input></div>
+</div>
+
+</body>
+</html>

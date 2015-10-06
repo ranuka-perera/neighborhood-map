@@ -1,0 +1,25 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#map {
+    height: 100%;
+}
+
+#overlay {
+    position: fixed;
+    top: 0;
+    padding: 5px;
+    /*background-color: whitesmoke;*/
+    background-color: rgba(245, 245, 245, 0.75);
+}
+
+.floating-input {
+    padding: 3px;
+}
+
+#search-field {
+    text-overflow: ellipsis;
+}
