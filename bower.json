@@ -18,7 +18,6 @@
     "tests"
   ],
   "dependencies": {
-    "bootstrap": "~3.3.5",
     "knockout": "~3.3.0",
     "jquery": "~2.1.4",
     "headjs": "~1.0.3"
