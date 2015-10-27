@@ -23,3 +23,17 @@ html, body {
 #search-field {
     text-overflow: ellipsis;
 }
+.gm-style-iw .info-image {
+    max-width: 150px;
+}
+/*{*/
+    /*max-width: 150px;*/
+/*}*/
+.info-title {
+    font-style: oblique;
+}
+
+#locations {
+    font-size: small;
+    color: #343434;
+}

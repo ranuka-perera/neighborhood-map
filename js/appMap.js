@@ -15,14 +15,25 @@ var viewModel = new (function () {
         data.forEach(function (item) {
             new_data.push(
                 {
-                    name: item.location.name,
-                    location: {lat: item.location.latitude, lng: item.location.longitude},
-                    thumb: item.images.thumbnail.url,
-                    image: item.images.low_resolution.url
+                    markerData: {
+                        name: item.location.name,
+                        location: {lat: item.location.latitude, lng: item.location.longitude},
+                        thumb: item.images.thumbnail.url,
+                        image: item.images.low_resolution.url
+                    },
+                    display: true
                 });
         });
         self.images(new_data);
     };
+    self.locationText = ko.computed(function () {
+        var images = self.images();
+        var text_arr = [];
+        images.forEach(function (image) {
+            text_arr.push(image.markerData.name);
+        });
+        return text_arr.join(' | ');
+    });
 })();
 
 var googleMap = {
@@ -42,32 +53,38 @@ var googleMap = {
             mapTypeControl: false
         });
         var inp = document.getElementById('search-field');
-        //self.map.controls[google.maps.ControlPosition.TOP_LEFT].push(inp); // Causes input location to shift.
-        var autocomplete = new google.maps.places.Autocomplete(inp);
+        // Use google Paces API, SearchBox for autocomplete.
+        var searchBox = new google.maps.places.SearchBox(inp);
 
-        autocomplete.addListener('place_changed', function () {
-            var place = autocomplete.getPlace();
-            if (!place.geometry) {
+        // Set bounds so that the area displayed in the map is searched first.
+        self.map.addListener('bounds_changed', function() {
+            searchBox.setBounds(self.map.getBounds());
+        });
+
+        // Update viewModel.centerLocation based on search result.
+        searchBox.addListener('places_changed', function () {
+            var places = searchBox.getPlaces();
+            if (places.length == 0) {
                 console.log('Invalid place.');
                 return;
             }
+            var place = places[0];
             viewModel.centerLocation({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()});
-            self.map.setCenter(viewModel.centerLocation());
-            self.map.setZoom(15);
 
         });
         self.infowindow = new google.maps.InfoWindow();
     },
-    addMarker: function (location, thumb_image, image) {
+    addMarker: function (location, thumb_image, image, display, text) {
         var map = googleMap.map;
         var marker = new google.maps.Marker({
             position: location,
-            map: googleMap.map,
+            map: display ? googleMap.map: null,
+
             icon: {url: thumb_image, scaledSize: new google.maps.Size(75, 75)}
         });
         googleMap.markers.push(marker);
         marker.addListener('click', function() {
-            googleMap.infowindow.setContent('<img alt="Marker image" src="'+image+'">');
+            googleMap.infowindow.setContent('<p><span class="info-title">'+text+'</span></p><p><img class="info-image" alt="Marker image" src="'+image+'"></p>');
             googleMap.infowindow.open(map, marker);
         });
     },
@@ -92,6 +109,7 @@ var instagramModel = {
             dataType: "jsonp",
             cache: true,
             success: function (data) {
+                console.log('instagram api call successful.');
                 console.log(data.data);
                 callback(data.data);
             },
@@ -104,10 +122,18 @@ var instagramModel = {
     }
 };
 
+//Glue the viewmodel to google map.
+viewModel.centerLocation.subscribe(function (newCenter) {
+    googleMap.map.setCenter(viewModel.centerLocation());
+    googleMap.map.setZoom(15);
+});
+
 // Glue the viewModel to the instagram api calling.
 viewModel.centerLocation.subscribe(function (newCenter) {
     instagramModel.getImages(newCenter, viewModel.updateImages);
 });
+
+// Glue the viewModel image array change to updating googleMap markers.
 viewModel.images.subscribe(function (data) {
     if (data.length < 1)
     {
@@ -115,7 +141,10 @@ viewModel.images.subscribe(function (data) {
     }
     googleMap.clearMarkers();
     data.forEach(function (imageObject) {
-        googleMap.addMarker(imageObject.location, imageObject.thumb, imageObject.image);
+        // Marker icon data.
+        var iconData = imageObject.markerData;
+        googleMap.addMarker(iconData.location, iconData.thumb, iconData.image, imageObject.display, iconData.name);
     })
 });
+
 ko.applyBindings(viewModel);
