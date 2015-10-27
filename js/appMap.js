@@ -1,17 +1,32 @@
-var viewModel = new (function () {
+var model = new (function () {
     var self = this;
-    // This variable holds the current map coordinates.
+    // This observable holds the current map coordinates.
     self.centerLocation = ko.observable({lat: 6.8936738, lng: 79.855619});
-    // This variable holds the info text about the current map coordinates.
+    // This observable holds the info text about the current map coordinates.
     self.centerText = ko.computed(function () {
         var center = self.centerLocation();
         return "Latitude: " + center.lat + ", Longitude: " + center.lng;
     });
-
+    // This observableArray holds the image objects from instagram.
     self.images = ko.observableArray();
-    self.updateImages = function(data) {
-        self.images.removeAll();
-        var new_data = self.images();
+    // This observable holds the text about all the current locations from the images observableArray.
+    self.locationText = ko.computed(function () {
+        var images = self.images();
+        var text_arr = [];
+        images.forEach(function (image) {
+            text_arr.push(image.markerData.name);
+        });
+        return text_arr.join(' | ');
+    });
+    // This observable holds the filter text to filter the displayed values.
+    self.filterValue = ko.observable();
+})();
+
+var mainController = new (function () {
+    var self = this;
+    self.updateImages = function (data) {
+        model.images.removeAll();
+        var new_data = model.images();
         data.forEach(function (item) {
             new_data.push(
                 {
@@ -24,16 +39,38 @@ var viewModel = new (function () {
                     display: true
                 });
         });
-        self.images(new_data);
+        model.images(new_data);
     };
-    self.locationText = ko.computed(function () {
-        var images = self.images();
-        var text_arr = [];
-        images.forEach(function (image) {
-            text_arr.push(image.markerData.name);
+    //self.filterImages
+
+    self.init = function () {
+        //Glue the model to google map.
+        model.centerLocation.subscribe(function (newCenter) {
+            googleMap.map.setCenter(newCenter);
+            googleMap.map.setZoom(15);
         });
-        return text_arr.join(' | ');
-    });
+
+        // Glue the model to the instagram api calling.
+        model.centerLocation.subscribe(function (newCenter) {
+            instagramModel.getImages(newCenter, self.updateImages);
+        });
+
+        // Glue the model image array change to updating googleMap markers.
+        model.images.subscribe(function (data) {
+            if (data.length < 1) {
+                return;
+            }
+            googleMap.clearMarkers();
+            data.forEach(function (imageObject) {
+                // Marker icon data.
+                var iconData = imageObject.markerData;
+                googleMap.addMarker(iconData.location, iconData.thumb, iconData.image, imageObject.display, iconData.name);
+            })
+        });
+
+        // Bind the observables to the html.
+        ko.applyBindings(model);
+    };
 })();
 
 var googleMap = {
@@ -46,7 +83,7 @@ var googleMap = {
     initMap: function () {
         var self = this;
         self.map = new google.maps.Map(document.getElementById('map'), {
-            center: viewModel.centerLocation(),
+            center: model.centerLocation(),
             zoom: 15,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             streetViewControl: false,
@@ -57,11 +94,11 @@ var googleMap = {
         var searchBox = new google.maps.places.SearchBox(inp);
 
         // Set bounds so that the area displayed in the map is searched first.
-        self.map.addListener('bounds_changed', function() {
+        self.map.addListener('bounds_changed', function () {
             searchBox.setBounds(self.map.getBounds());
         });
 
-        // Update viewModel.centerLocation based on search result.
+        // Update model.centerLocation based on search result.
         searchBox.addListener('places_changed', function () {
             var places = searchBox.getPlaces();
             if (places.length == 0) {
@@ -69,7 +106,7 @@ var googleMap = {
                 return;
             }
             var place = places[0];
-            viewModel.centerLocation({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()});
+            model.centerLocation({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()});
 
         });
         self.infowindow = new google.maps.InfoWindow();
@@ -78,13 +115,13 @@ var googleMap = {
         var map = googleMap.map;
         var marker = new google.maps.Marker({
             position: location,
-            map: display ? googleMap.map: null,
+            map: display ? googleMap.map : null,
 
             icon: {url: thumb_image, scaledSize: new google.maps.Size(75, 75)}
         });
         googleMap.markers.push(marker);
-        marker.addListener('click', function() {
-            googleMap.infowindow.setContent('<p><span class="info-title">'+text+'</span></p><p><img class="info-image" alt="Marker image" src="'+image+'"></p>');
+        marker.addListener('click', function () {
+            googleMap.infowindow.setContent('<p><span class="info-title">' + text + '</span></p><p><img class="info-image" alt="Marker image" src="' + image + '"></p>');
             googleMap.infowindow.open(map, marker);
         });
     },
@@ -98,10 +135,13 @@ var googleMap = {
 googleMap.mapsUrl = googleMap.mapsUrl.replace("API_KEY", googleMap.mapsApiKey);
 
 var instagramModel = {
-    getImages: function(centerLocation, callback, errorCallback) {
+    clientId: '930a18ab1206433e8c877070ab636404',
+    getImages: function (centerLocation, callback, errorCallback) {
+        var self = this;
         var insta_api = (
         "https://api.instagram.com/v1/media/search?lat=" + centerLocation.lat + "&lng=" + centerLocation.lng +
-        "&distance=5000&client_id=930a18ab1206433e8c877070ab636404");
+        "&distance=5000&client_id=API_KEY");
+        insta_api = insta_api.replace("API_KEY", self.clientId);
         $.ajax({
             url: insta_api,
             type: "GET",
@@ -122,29 +162,4 @@ var instagramModel = {
     }
 };
 
-//Glue the viewmodel to google map.
-viewModel.centerLocation.subscribe(function (newCenter) {
-    googleMap.map.setCenter(viewModel.centerLocation());
-    googleMap.map.setZoom(15);
-});
-
-// Glue the viewModel to the instagram api calling.
-viewModel.centerLocation.subscribe(function (newCenter) {
-    instagramModel.getImages(newCenter, viewModel.updateImages);
-});
-
-// Glue the viewModel image array change to updating googleMap markers.
-viewModel.images.subscribe(function (data) {
-    if (data.length < 1)
-    {
-        return;
-    }
-    googleMap.clearMarkers();
-    data.forEach(function (imageObject) {
-        // Marker icon data.
-        var iconData = imageObject.markerData;
-        googleMap.addMarker(iconData.location, iconData.thumb, iconData.image, imageObject.display, iconData.name);
-    })
-});
-
-ko.applyBindings(viewModel);
+mainController.init();
