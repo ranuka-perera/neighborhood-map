@@ -11,13 +11,19 @@ var model = new (function () {
     self.images = ko.observableArray();
     // This observable holds the text about all the current locations from the images observableArray.
     self.locationText = ko.computed(function () {
-        var text_arr = [];
-        ko.utils.arrayForEach(self.images(), function (image) {
+        var fullArray = self.images();
+        var filteredArray = [];
+        ko.utils.arrayForEach(fullArray, function (image) {
             if (image.display()) {
-                text_arr.push(image.markerData.name);
+                filteredArray.push(image.markerData.name);
             }
         });
-        return text_arr.join(' | ');
+        var fullLength = fullArray.length;
+        var filteredLength = filteredArray.length;
+        var filteredText = ko.utils.arrayGetDistinctValues(filteredArray).join(' | ');
+        if (fullLength > 0) {
+            return "(" + fullLength - filteredLength + "/" + fullLength + " filtered out) " + filteredText;
+        }
     });
     // This observable holds the filter text to filter the displayed values.
     self.filterValue = ko.observable();
@@ -46,10 +52,14 @@ var mainController = new (function () {
     //self.filterImages
 
     self.init = function () {
-        //Glue the model to google map.
+        //Glue the model center location to google map center.
         model.centerLocation.subscribe(function (newCenter) {
             googleMap.map.setCenter(newCenter);
             googleMap.map.setZoom(15);
+        });
+        // Hide infowindow when typing.
+        model.filterValue.subscribe(function () {
+            googleMap.infowindow.close();
         });
 
         // Glue the model to the instagram api calling.
