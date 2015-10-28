@@ -11,10 +11,11 @@ var model = new (function () {
     self.images = ko.observableArray();
     // This observable holds the text about all the current locations from the images observableArray.
     self.locationText = ko.computed(function () {
-        var images = self.images();
         var text_arr = [];
-        images.forEach(function (image) {
-            text_arr.push(image.markerData.name);
+        ko.utils.arrayForEach(self.images(), function (image) {
+            if (image.display()) {
+                text_arr.push(image.markerData.name);
+            }
         });
         return text_arr.join(' | ');
     });
@@ -26,6 +27,7 @@ var mainController = new (function () {
     var self = this;
     self.updateImages = function (data) {
         model.images.removeAll();
+        model.filterValue('');
         var new_data = model.images();
         data.forEach(function (item) {
             new_data.push(
@@ -36,7 +38,7 @@ var mainController = new (function () {
                         thumb: item.images.thumbnail.url,
                         image: item.images.low_resolution.url
                     },
-                    display: true
+                    display: ko.observable(true)
                 });
         });
         model.images(new_data);
@@ -66,6 +68,14 @@ var mainController = new (function () {
                 var iconData = imageObject.markerData;
                 googleMap.addMarker(iconData.location, iconData.thumb, iconData.image, imageObject.display, iconData.name);
             })
+        });
+
+        // Filter data when the filter text is typed.
+        model.filterValue.subscribe(function (filterValue) {
+            var images = model.images();
+            images.forEach(function (image) {
+                image.display(!filterValue || image.markerData.name.toLowerCase().indexOf(filterValue.toLowerCase()) >= 0);
+            });
         });
 
         // Bind the observables to the html.
@@ -115,7 +125,7 @@ var googleMap = {
         var map = googleMap.map;
         var marker = new google.maps.Marker({
             position: location,
-            map: display ? googleMap.map : null,
+            map: display() ? googleMap.map : null,
 
             icon: {url: thumb_image, scaledSize: new google.maps.Size(75, 75)}
         });
@@ -123,6 +133,14 @@ var googleMap = {
         marker.addListener('click', function () {
             googleMap.infowindow.setContent('<p><span class="info-title">' + text + '</span></p><p><img class="info-image" alt="Marker image" src="' + image + '"></p>');
             googleMap.infowindow.open(map, marker);
+        });
+        display.subscribe(function (newDisplayVal) {
+            if (newDisplayVal) {
+                marker.setMap(googleMap.map);
+            }
+            else {
+                marker.setMap(null);
+            }
         });
     },
     clearMarkers: function () {
