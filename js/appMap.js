@@ -1,7 +1,7 @@
 var model = new (function () {
     var self = this;
     // This observable holds the current map coordinates.
-    self.centerLocation = ko.observable({lat: 6.8936738, lng: 79.855619});
+    self.centerLocation = ko.observable({lat: 6.8936738, lng: 79.855619}, {persist: 'centerLocation'});
     // This observable holds the info text about the current map coordinates.
     self.centerText = ko.computed(function () {
         var center = self.centerLocation();
@@ -22,7 +22,7 @@ var model = new (function () {
         var filteredLength = filteredArray.length;
         var filteredText = ko.utils.arrayGetDistinctValues(filteredArray).join(' | ');
         if (fullLength > 0) {
-            return "(" + fullLength - filteredLength + "/" + fullLength + " filtered out) " + filteredText;
+            return "(" + (fullLength - filteredLength).toString() + "/" + fullLength + " filtered out) " + filteredText;
         }
     });
     // This observable holds the filter text to filter the displayed values.
@@ -129,19 +129,34 @@ var googleMap = {
             model.centerLocation({lat: place.geometry.location.lat(), lng: place.geometry.location.lng()});
 
         });
+        // Initialize infoWindow.
         self.infowindow = new google.maps.InfoWindow();
+        self.infowindow.addListener('closeclick', function () {
+            googleMap.stopMarkerAnimations();
+        });
+        // Calling location update once to trigger instagram on initial load.
+        model.centerLocation(model.centerLocation());
+
     },
     addMarker: function (location, thumb_image, image, display, text) {
         var map = googleMap.map;
         var marker = new google.maps.Marker({
             position: location,
             map: display() ? googleMap.map : null,
-
+            // instagram api completes before the map is loaded, so this animation might sometimes not be displayed.
+            animation: google.maps.Animation.DROP,
             icon: {url: thumb_image, scaledSize: new google.maps.Size(75, 75)}
         });
         googleMap.markers.push(marker);
         marker.addListener('click', function () {
-            googleMap.infowindow.setContent('<p><span class="info-title">' + text + '</span></p><p><img class="info-image" alt="Marker image" src="' + image + '"></p>');
+            // Clear animations in all markers;
+            googleMap.stopMarkerAnimations();
+            // Set animation in currect marker.
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+            // Update infowindow.
+            googleMap.infowindow.setContent(
+                '<p><span class="info-title">' + text + '</span></p><p>' +
+                '<img class="info-image" alt="Marker image" src="' + image + '"></p>');
             googleMap.infowindow.open(map, marker);
         });
         display.subscribe(function (newDisplayVal) {
@@ -157,7 +172,12 @@ var googleMap = {
         googleMap.markers.forEach(function (marker) {
             marker = null;
         });
-        googleMap.markers.length = 0;
+        googleMap.markers = [];
+    },
+    stopMarkerAnimations: function () {
+        googleMap.markers.forEach(function (marker) {
+            marker.setAnimation(null);
+        });
     }
 };
 googleMap.mapsUrl = googleMap.mapsUrl.replace("API_KEY", googleMap.mapsApiKey);
