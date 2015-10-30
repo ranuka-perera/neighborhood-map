@@ -1,16 +1,16 @@
 var model = new (function () {
     var self = this;
     // This observable holds the current map coordinates.
-    self.centerLocation = ko.observable({lat: 6.8936738, lng: 79.855619}, {persist: 'centerLocation'});
+    self.centerLocation = ko.observable({lat: 6.9255413357207045, lng: 79.86969523291009}, {persist: 'centerLocation'});
     // This observable holds the info text about the current map coordinates.
-    self.centerText = ko.computed(function () {
+    self.centerText = ko.pureComputed(function () {
         var center = self.centerLocation();
         return "Latitude: " + center.lat + ", Longitude: " + center.lng;
     });
     // This observableArray holds the image objects from instagram.
     self.images = ko.observableArray();
     // This observable holds the text about all the current locations from the images observableArray.
-    self.locationText = ko.computed(function () {
+    self.locationText = ko.pureComputed(function () {
         var fullArray = self.images();
         var filteredArray = [];
         ko.utils.arrayForEach(fullArray, function (image) {
@@ -27,6 +27,28 @@ var model = new (function () {
     });
     // This observable holds the filter text to filter the displayed values.
     self.filterValue = ko.observable();
+    self.notification = {
+        message: ko.observable(),
+        messageStatus: ko.observable(),  // 0 is hidden, 1 is ok, 2 is warning, 3 is error.
+        messageClass: ko.pureComputed(function () {
+            var returnVal;
+            switch (self.notification.messageStatus()) {
+                case 0:
+                    returnVal = 'none';
+                    break;
+                case 1:
+                    returnVal = 'completed';
+                    break;
+                case 2:
+                    returnVal = 'loading';
+                    break;
+                case 3:
+                    returnVal = 'error';
+                    break;
+            }
+            return returnVal;
+        })
+    };
 })();
 
 var mainController = new (function () {
@@ -55,7 +77,7 @@ var mainController = new (function () {
         //Glue the model center location to google map center.
         model.centerLocation.subscribe(function (newCenter) {
             googleMap.map.setCenter(newCenter);
-            googleMap.map.setZoom(15);
+            googleMap.map.setZoom(12);
         });
         // Hide infowindow when typing.
         model.filterValue.subscribe(function () {
@@ -104,7 +126,7 @@ var googleMap = {
         var self = this;
         self.map = new google.maps.Map(document.getElementById('map'), {
             center: model.centerLocation(),
-            zoom: 15,
+            zoom: 12,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             streetViewControl: false,
             mapTypeControl: false
@@ -198,14 +220,22 @@ var instagramModel = {
             cache: true,
             success: function (data) {
                 console.log('instagram api call successful.');
-                console.log(data.data);
+                model.notification.message('Data loaded from Instagram.');
+                model.notification.messageStatus(1);
+                setTimeout(function () {model.notification.message(''); model.notification.messageStatus(0);}, 3000);
+                //console.log(data.data);
                 callback(data.data);
             },
             error: function () {
                 console.log('Failed to make insta api call.');
+                model.notification.message('Instagram api call failed.');
+                model.notification.messageStatus(3);
                 errorCallback();
             }
         });
+
+        model.notification.message('Loading data from Instagram.');
+        model.notification.messageStatus(2);
         console.log('instagram api call made.');
     }
 };

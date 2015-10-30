@@ -37,3 +37,21 @@ html, body {
     font-size: small;
     color: #343434;
 }
+/*.message-data {*/
+    /*display: inline-block;*/
+/*}*/
+.completed {
+    background-color: #41B141;
+    display: inline-block;
+}
+.loading {
+    background-color: yellow;
+    display: inline-block;
+}
+.error {
+    background-color: red;
+    display: inline-block;
+}
+.none {
+    display: none;
+}
