@@ -14,6 +14,9 @@ html, body {
     padding: 5px;
     /*background-color: whitesmoke;*/
     background-color: rgba(245, 245, 245, 0.75);
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
 }
 
 .floating-input {
@@ -33,9 +36,16 @@ html, body {
     font-style: oblique;
 }
 
+#search {
+    flex-basis: 10;
+}
+#filter {
+    flex-basis: 10;
+}
 #locations {
     font-size: small;
     color: #343434;
+    flex-basis: 70;
 }
 /*.message-data {*/
     /*display: inline-block;*/
@@ -54,4 +64,7 @@ html, body {
 }
 .none {
     display: none;
+}
+.tt-menu {
+    background-color: whitesmoke;
 }
