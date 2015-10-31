@@ -8,11 +8,14 @@
     <script src="bower_components/headjs/dist/1.0.0/head.load.min.js"></script>
     <script>
         // Api key is in the appMap.js, so we need for it to load before we load the google maps script.
-        // The scripts are loaded asyncly.
+        // The scripts are downloaded asyncly, but executed in order.
         head.load(
             "bower_components/knockout/dist/knockout.js",
             "bower_components/knockout.localstorage/build/output/knockout.localStorage-latest.js",
-            "bower_components/jquery/dist/jquery.min.js", "js/appMap.js", function () {
+            "bower_components/jquery/dist/jquery.min.js",
+            "bower_components/typeahead.js/dist/typeahead.jquery.min.js",
+            "js/typeahead-ko.js", "js/appMap.js",
+            function () {
                 // Load google maps only if page is fully loaded.
                 head.ready(document, function() {
                     head.load(googleMap.mapsUrl);
@@ -24,7 +27,7 @@
 <div id="map"></div>
 <div id="overlay">
     <div id="search" class="floating-input"><label for="search-field">Search Map</label><input id="search-field" type="text"></div>
-    <div id="filter" class="floating-input"><label for="filter-field">Filter Map</label><input id="filter-field" data-bind="textInput: filterValue"></div>
+    <div id="filter" class="floating-input"><label for="filter-field">Filter Map</label><input id="filter-field" data-bind="textInput: filterValue, typeahead: filterTypeAhead"></div>
     <div id="locations" class=""><span data-bind="text: locationText"></span></div>
     <div id="messages" class=""><span class="message-data" data-bind="text: notification.message, attr: {class: notification.messageClass}"></span></div>
 </div>

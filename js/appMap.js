@@ -1,3 +1,4 @@
+"use strict";
 var model = new (function () {
     var self = this;
     // This observable holds the current map coordinates.
@@ -27,6 +28,11 @@ var model = new (function () {
     });
     // This observable holds the filter text to filter the displayed values.
     self.filterValue = ko.observable();
+    self.filterTypeAhead = ko.pureComputed(function () {
+        return self.images().map(function (image) {
+            return image.markerData.name;
+        });
+    });
     self.notification = {
         message: ko.observable(),
         messageStatus: ko.observable(),  // 0 is hidden, 1 is ok, 2 is warning, 3 is error.
@@ -77,7 +83,7 @@ var mainController = new (function () {
         //Glue the model center location to google map center.
         model.centerLocation.subscribe(function (newCenter) {
             googleMap.map.setCenter(newCenter);
-            googleMap.map.setZoom(12);
+            googleMap.map.setZoom(13);
         });
         // Hide infowindow when typing.
         model.filterValue.subscribe(function () {
@@ -126,7 +132,7 @@ var googleMap = {
         var self = this;
         self.map = new google.maps.Map(document.getElementById('map'), {
             center: model.centerLocation(),
-            zoom: 12,
+            zoom: 13,
             mapTypeId: google.maps.MapTypeId.ROADMAP,
             streetViewControl: false,
             mapTypeControl: false
