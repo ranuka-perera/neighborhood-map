@@ -50,5 +50,5 @@ crashlytics-build.properties
 node_modules/
 #bower_components/
 *.log
-
-
+#gulp-gh-pages folder
+.publish
