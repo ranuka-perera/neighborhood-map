@@ -1,13 +1,13 @@
 "use strict";
 var model = new (function () {
     var self = this;
-    // This observable holds the current map coordinates.
+    // This observable holds the current map coordinates. Updatimg it updates the googlemap location.
     self.centerLocation = ko.observable({lat: 6.9255413357207045, lng: 79.86969523291009}, {persist: 'centerLocation'});
-    // This observable holds the info text about the current map coordinates.
-    self.centerText = ko.pureComputed(function () {
-        var center = self.centerLocation();
-        return "Latitude: " + center.lat + ", Longitude: " + center.lng;
-    });
+    //// This observable holds the info text about the current map coordinates.
+    //self.centerText = ko.pureComputed(function () {
+    //    var center = self.centerLocation();
+    //    return "Latitude: " + center.lat + ", Longitude: " + center.lng;
+    //});
     // This observableArray holds the image objects from instagram.
     self.images = ko.observableArray();
     // This observable holds the text about all the current locations from the images observableArray.
@@ -33,6 +33,7 @@ var model = new (function () {
             return image.markerData.name;
         });
     });
+    // Updating the observable properties in this object changes the notification message/style.
     self.notification = {
         message: ko.observable(),
         messageStatus: ko.observable(),  // 0 is hidden, 1 is ok, 2 is warning, 3 is error.
@@ -57,8 +58,11 @@ var model = new (function () {
     };
 })();
 
+//- The main class that gets 'run'. Holds the magic functions to make them all work.
 var mainController = new (function () {
+    //- Nice comfy closure to access this. 'self' is also used in python, so added bonus.
     var self = this;
+    // Function to run to update the model.images observable after we get the instagram data.
     self.updateImages = function (data) {
         model.images.removeAll();
         model.filterValue('');
@@ -72,27 +76,27 @@ var mainController = new (function () {
                         thumb: item.images.thumbnail.url,
                         image: item.images.low_resolution.url
                     },
+                    // When this observable changes to false, the marker is automatically hidden from the map.
                     display: ko.observable(true)
                 });
         });
         model.images(new_data);
     };
-    //self.filterImages
 
     self.init = function () {
         //Glue the model center location to google map center.
         model.centerLocation.subscribe(function (newCenter) {
-            googleMap.map.setCenter(newCenter);
-            googleMap.map.setZoom(13);
+            googleMapViewModel.map.setCenter(newCenter);
+            googleMapViewModel.map.setZoom(13);
         });
-        // Hide infowindow when typing.
+        // Hide infowindow when typing info the filter.
         model.filterValue.subscribe(function () {
-            googleMap.infowindow.close();
+            googleMapViewModel.infowindow.close();
         });
 
         // Glue the model to the instagram api calling.
         model.centerLocation.subscribe(function (newCenter) {
-            instagramModel.getImages(newCenter, self.updateImages);
+            instagramController.getImages(newCenter, self.updateImages);
         });
 
         // Glue the model image array change to updating googleMap markers.
@@ -100,11 +104,11 @@ var mainController = new (function () {
             if (data.length < 1) {
                 return;
             }
-            googleMap.clearMarkers();
+            googleMapViewModel.clearMarkers();
             data.forEach(function (imageObject) {
                 // Marker icon data.
                 var iconData = imageObject.markerData;
-                googleMap.addMarker(iconData.location, iconData.thumb, iconData.image, imageObject.display, iconData.name);
+                googleMapViewModel.addMarker(iconData.location, iconData.thumb, iconData.image, imageObject.display, iconData.name);
             })
         });
 
@@ -121,9 +125,9 @@ var mainController = new (function () {
     };
 })();
 
-var googleMap = {
+var googleMapViewModel = {
     mapsApiKey: 'AIzaSyAgwbgTQdWFwEBCqiRae0pG4c8xyY2lNAQ',
-    mapsUrl: "https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=places&callback=googleMap.initMap",
+    mapsUrl: "https://maps.googleapis.com/maps/api/js?key=API_KEY&libraries=places&callback=googleMapViewModel.initMap",
     map: null,
     markers: [],
     infowindow: null,
@@ -160,36 +164,36 @@ var googleMap = {
         // Initialize infoWindow.
         self.infowindow = new google.maps.InfoWindow();
         self.infowindow.addListener('closeclick', function () {
-            googleMap.stopMarkerAnimations();
+            googleMapViewModel.stopMarkerAnimations();
         });
         // Calling location update once to trigger instagram on initial load.
         model.centerLocation(model.centerLocation());
 
     },
     addMarker: function (location, thumb_image, image, display, text) {
-        var map = googleMap.map;
+        var map = googleMapViewModel.map;
         var marker = new google.maps.Marker({
             position: location,
-            map: display() ? googleMap.map : null,
+            map: display() ? googleMapViewModel.map : null,
             // instagram api completes before the map is loaded, so this animation might sometimes not be displayed.
             animation: google.maps.Animation.DROP,
             icon: {url: thumb_image, scaledSize: new google.maps.Size(75, 75)}
         });
-        googleMap.markers.push(marker);
+        googleMapViewModel.markers.push(marker);
         marker.addListener('click', function () {
             // Clear animations in all markers;
-            googleMap.stopMarkerAnimations();
+            googleMapViewModel.stopMarkerAnimations();
             // Set animation in currect marker.
             marker.setAnimation(google.maps.Animation.BOUNCE);
             // Update infowindow.
-            googleMap.infowindow.setContent(
+            googleMapViewModel.infowindow.setContent(
                 '<p><span class="info-title">' + text + '</span></p><p>' +
                 '<img class="info-image" alt="Marker image" src="' + image + '"></p>');
-            googleMap.infowindow.open(map, marker);
+            googleMapViewModel.infowindow.open(map, marker);
         });
         display.subscribe(function (newDisplayVal) {
             if (newDisplayVal) {
-                marker.setMap(googleMap.map);
+                marker.setMap(googleMapViewModel.map);
             }
             else {
                 marker.setMap(null);
@@ -197,20 +201,20 @@ var googleMap = {
         });
     },
     clearMarkers: function () {
-        googleMap.markers.forEach(function (marker) {
+        googleMapViewModel.markers.forEach(function (marker) {
             marker = null;
         });
-        googleMap.markers = [];
+        googleMapViewModel.markers = [];
     },
     stopMarkerAnimations: function () {
-        googleMap.markers.forEach(function (marker) {
+        googleMapViewModel.markers.forEach(function (marker) {
             marker.setAnimation(null);
         });
     }
 };
-googleMap.mapsUrl = googleMap.mapsUrl.replace("API_KEY", googleMap.mapsApiKey);
+googleMapViewModel.mapsUrl = googleMapViewModel.mapsUrl.replace("API_KEY", googleMapViewModel.mapsApiKey);
 
-var instagramModel = {
+var instagramController = {
     clientId: '930a18ab1206433e8c877070ab636404',
     getImages: function (centerLocation, callback, errorCallback) {
         var self = this;

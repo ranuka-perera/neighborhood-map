@@ -1,19 +1,12 @@
 ko.bindingHandlers.typeahead = {
+    // Update the filter typeahead when data is reloaded.
     update: function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
         var $element = $(element);
         var source = ko.utils.unwrapObservable(valueAccessor());
         $element.typeahead('destroy');
 
-        var options = {
-            hint: false,
-            highlight: true
-        };
-
-
-        var dataset = {
-            source: substringMatcher(source),
-            limit: 5
-        };
+        var options = { hint: false, highlight: true};
+        var dataset = { source: substringMatcher(source), limit: 5};
 
         $element.typeahead(options, dataset);
     }

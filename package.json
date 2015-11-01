@@ -1,16 +1,13 @@
 {
   "name": "neibourhood_map",
   "version": "1.0.0",
-  "description": "",
+  "description": "Instagram allover Google Maps.",
   "main": "index.html",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "repository": {
     "type": "git",
     "url": "git@github.com-udacity:ranuka-perera/neighborhood-map.git"
   },
-  "author": "",
+  "author": "Ranuka Perera",
   "license": "ISC",
   "devDependencies": {
     "gulp": "^3.9.0",

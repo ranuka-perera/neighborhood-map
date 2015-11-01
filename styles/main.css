@@ -17,7 +17,6 @@ html, body {
     position: fixed;
     top: 0;
     padding: 5px;
-    /*background-color: whitesmoke;*/
     background-color: rgba(245, 245, 245, 0.75);
     display: flex;
     flex-direction: row;
@@ -43,23 +42,12 @@ label {
 .info-title {
     font-style: oblique;
 }
-
-#search {
-    /*flex-basis: 10;*/
-}
-#filter {
-    /*flex-basis: 10;*/
-}
 #locations {
     font-size: 0.8em;
     color: #343434;
-    /*flex-basis: 70;*/
     max-height: 3.4em;
     overflow: hidden;
 }
-/*.message-data {*/
-    /*display: inline-block;*/
-/*}*/
 .completed {
     background-color: #41B141;
     display: inline-block;
