@@ -3,6 +3,11 @@ html, body {
     margin: 0;
     padding: 0;
 }
+@media all and (min-device-width: 600px) {
+    body{
+        font-size: 18px;
+    }
+}
 
 #map {
     height: 100%;
@@ -14,28 +19,43 @@ html, body {
     padding: 5px;
     /*background-color: whitesmoke;*/
     background-color: rgba(245, 245, 245, 0.75);
+    display: flex;
+    flex-direction: row;
+    flex-flow: row wrap;
 }
 
 .floating-input {
     padding: 3px;
+    display: inline-flex;
+    width: 17.5em;
+}
+
+label {
+    flex-basis: 32%;
 }
 
 #search-field {
     text-overflow: ellipsis;
 }
 .gm-style-iw .info-image {
-    max-width: 150px;
+    max-width: 9.4em;
 }
-/*{*/
-    /*max-width: 150px;*/
-/*}*/
 .info-title {
     font-style: oblique;
 }
 
+#search {
+    /*flex-basis: 10;*/
+}
+#filter {
+    /*flex-basis: 10;*/
+}
 #locations {
-    font-size: small;
+    font-size: 0.8em;
     color: #343434;
+    /*flex-basis: 70;*/
+    max-height: 3.4em;
+    overflow: hidden;
 }
 /*.message-data {*/
     /*display: inline-block;*/
@@ -54,4 +74,7 @@ html, body {
 }
 .none {
     display: none;
+}
+.tt-menu {
+    background-color: whitesmoke;
 }
