@@ -1,13 +1,8 @@
 "use strict";
 var model = new (function () {
     var self = this;
-    // This observable holds the current map coordinates. Updatimg it updates the googlemap location.
+    // This observable holds the current map coordinates. Updating it updates the googlemap location.
     self.centerLocation = ko.observable({lat: 6.9255413357207045, lng: 79.86969523291009}, {persist: 'centerLocation'});
-    //// This observable holds the info text about the current map coordinates.
-    //self.centerText = ko.pureComputed(function () {
-    //    var center = self.centerLocation();
-    //    return "Latitude: " + center.lat + ", Longitude: " + center.lng;
-    //});
     // This observableArray holds the image objects from instagram.
     self.images = ko.observableArray();
     // This observable holds the text about all the current locations from the images observableArray.
@@ -122,6 +117,25 @@ var mainController = new (function () {
 
         // Bind the observables to the html.
         ko.applyBindings(model);
+
+        // Enable hamburger menu.
+        var hamburger = document.getElementById('hamburger');
+        var content = document.getElementById('content');
+        hamburger.addEventListener('click', function () {
+            $(content).toggleClass('hide');
+        });
+        // Auto hide content on initial load.
+        if (window.innerWidth < 1070) {
+            content.className = 'hide';
+                //$(content).addClass('hide');
+        }
+        // TODO: Use https://developer.mozilla.org/en-US/docs/Web/Events/resize to make resize more efficient.
+        window.addEventListener('resize', function (target) {
+            if (window.innerWidth >= 1070) {
+                content.className = '';
+            }
+        });
+
     };
 })();
 
