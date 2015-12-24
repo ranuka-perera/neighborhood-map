@@ -3,9 +3,15 @@ html, body {
     margin: 0;
     padding: 0;
 }
-@media all and (min-device-width: 600px) {
+@media screen and (min-device-width: 600px) {
     body{
         font-size: 18px;
+    }
+}
+
+@media screen and (min-width:1070px){
+    #hamburger {
+        display: none;
     }
 }
 
@@ -22,11 +28,20 @@ html, body {
     flex-direction: row;
     flex-flow: row wrap;
 }
+#content {
+    display: flex;
+    flex-direction: row;
+    flex-flow: row wrap;
+}
+
+#content.hide {
+    display: none;
+}
 
 .floating-input {
     padding: 3px;
     display: inline-flex;
-    width: 17.5em;
+    width: 20.5em;
 }
 
 label {
@@ -45,8 +60,10 @@ label {
 #locations {
     font-size: 0.8em;
     color: #343434;
-    max-height: 3.4em;
     overflow: hidden;
+}
+#locations span {
+  vertical-align: middle;
 }
 .completed {
     background-color: #41B141;
@@ -65,4 +82,45 @@ label {
 }
 .tt-menu {
     background-color: whitesmoke;
+}
+
+/*https://css-tricks.com/three-line-menu-navicon/*/
+#hamburger {
+  position: relative;
+  padding-left: 1.25em;
+  margin-bottom: 1.5em;
+}
+#hamburger:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.25em;
+  width: 1em;
+  height: 0.15em;
+  background: black;
+  box-shadow:
+    0 0.25em 0 0 black,
+    0 0.5em 0 0 black;
+}
+
+#listview {
+    width: 100%;
+}
+
+#listview ul {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    /*text-align: center;*/
+}
+
+#listview li {
+    display: inline;
+    margin: 0.15em;
+}
+#listview button {
+    text-decoration: none;
+padding: .2em 1em;
+color: #fff;
+background-color: #036;
 }
