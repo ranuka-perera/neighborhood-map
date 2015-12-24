@@ -16,9 +16,9 @@ var model = new (function () {
         });
         var fullLength = fullArray.length;
         var filteredLength = filteredArray.length;
-        var filteredText = ko.utils.arrayGetDistinctValues(filteredArray).join(' | ');
+        //var filteredText = ko.utils.arrayGetDistinctValues(filteredArray).join(' | ');
         if (fullLength > 0) {
-            return "(" + (fullLength - filteredLength).toString() + "/" + fullLength + " filtered out) " + filteredText;
+            return "(" + (fullLength - filteredLength).toString() + "/" + fullLength + " filtered out) ";// + filteredText;
         }
     });
     // This observable holds the filter text to filter the displayed values.
@@ -27,6 +27,37 @@ var model = new (function () {
         return self.images().map(function (image) {
             return image.markerData.name;
         });
+    });
+    // Clears the filter.
+    self.clearFilter = function () {
+        self.filterValue('');
+    };
+
+    // This computed observeable returns the filtered markers (excluding duplicates). Used for list buttons.
+    self.filteredImages = ko.pureComputed(function () {
+
+        // Function to remove duplicate names.
+        var valInArray = function (array, value) {
+            var inArray = false;
+            array.forEach(function (arrVal) {
+                if (value.markerData.name == arrVal.markerData.name) {
+                    inArray = true;
+                }
+            });
+            return inArray;
+        };
+
+        var fullArray = self.images();
+        var filteredArray = [];
+        ko.utils.arrayForEach(fullArray, function (image) {
+            if (image.display() && !valInArray(filteredArray, image)) {
+                image.select = function () {
+                    self.filterValue(image.markerData.name);
+                };
+                filteredArray.push(image);
+            }
+        });
+        return filteredArray;
     });
     // Updating the observable properties in this object changes the notification message/style.
     self.notification = {
@@ -137,6 +168,12 @@ var mainController = new (function () {
         });
 
     };
+    // Hide menu if it is hideable.
+    self.hideMenu = function () {
+        if (window.innerWidth < 1070) {
+            document.getElementById('content').className = 'hide';
+        }
+    };
 })();
 
 var googleMapViewModel = {
@@ -204,6 +241,7 @@ var googleMapViewModel = {
                 '<p><span class="info-title">' + text + '</span></p><p>' +
                 '<img class="info-image" alt="Marker image" src="' + image + '"></p>');
             googleMapViewModel.infowindow.open(map, marker);
+            mainController.hideMenu();
         });
         display.subscribe(function (newDisplayVal) {
             if (newDisplayVal) {

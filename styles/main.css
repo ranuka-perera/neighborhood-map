@@ -102,3 +102,25 @@ label {
     0 0.25em 0 0 black,
     0 0.5em 0 0 black;
 }
+
+#listview {
+    width: 100%;
+}
+
+#listview ul {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+    /*text-align: center;*/
+}
+
+#listview li {
+    display: inline;
+    margin: 0.15em;
+}
+#listview button {
+    text-decoration: none;
+padding: .2em 1em;
+color: #fff;
+background-color: #036;
+}

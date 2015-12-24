@@ -29,9 +29,13 @@
     <div id="hamburger"></div>
     <div id="content">
         <div id="search" class="floating-input"><label for="search-field">Navigate Map</label><input id="search-field" type="text"></div>
-        <div id="filter" class="floating-input"><label for="filter-field">Search Markers</label><input id="filter-field" data-bind="textInput: filterValue, typeahead: filterTypeAhead"></div>
-        <div id="locations" class=""><span data-bind="text: locationText"></span></div>
-        <div id="messages" class=""><span class="message-data" data-bind="text: notification.message, attr: {class: notification.messageClass}"></span></div>
+        <div id="filter" class="floating-input">
+            <label for="filter-field">Search Markers</label>
+            <input id="filter-field" data-bind="textInput: filterValue, typeahead: filterTypeAhead">
+            <button data-bind="click: clearFilter">Clear</button></div>
+        <div id="locations"><span data-bind="text: locationText"></span></div>
+        <div id="messages"><span class="message-data" data-bind="text: notification.message, attr: {class: notification.messageClass}"></span></div>
+        <div id="listview"><ul data-bind="foreach: filteredImages"><li><button data-bind="text: markerData.name, click: select"></button></li></ul></div>
     </div>
 </div>
 
